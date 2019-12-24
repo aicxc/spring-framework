@@ -65,35 +65,20 @@ public class FileSystemResource extends AbstractResource implements WritableReso
 
 
 	/**
-	 * Create a new {@code FileSystemResource} from a file path.
-	 * <p>Note: When building relative resources via {@link #createRelative},
-	 * it makes a difference whether the specified resource base path here
-	 * ends with a slash or not. In the case of "C:/dir1/", relative paths
-	 * will be built underneath that root: e.g. relative path "dir2" ->
-	 * "C:/dir1/dir2". In the case of "C:/dir1", relative paths will apply
-	 * at the same directory level: relative path "dir2" -> "C:/dir2".
-	 * @param path a file path
-	 * @see #FileSystemResource(Path)
+	 * 处理 path 成可用的路径，如处理 "\\" 和 ":"
+	 * 通过路径初始化 File 以及 Path
 	 */
 	public FileSystemResource(String path) {
 		Assert.notNull(path, "Path must not be null");
+		// 处理 path, 如将 "\\" 替换成 "/" 等
 		this.path = StringUtils.cleanPath(path);
 		this.file = new File(path);
 		this.filePath = this.file.toPath();
 	}
 
+
 	/**
-	 * Create a new {@code FileSystemResource} from a {@link File} handle.
-	 * <p>Note: When building relative resources via {@link #createRelative},
-	 * the relative path will apply <i>at the same directory level</i>:
-	 * e.g. new File("C:/dir1"), relative path "dir2" -> "C:/dir2"!
-	 * If you prefer to have relative paths built underneath the given root directory,
-	 * use the {@link #FileSystemResource(String) constructor with a file path}
-	 * to append a trailing slash to the root path: "C:/dir1/", which indicates
-	 * this directory as root for all relative paths.
-	 * @param file a File handle
-	 * @see #FileSystemResource(Path)
-	 * @see #getFile()
+	 * @see #FileSystemResource(String)
 	 */
 	public FileSystemResource(File file) {
 		Assert.notNull(file, "File must not be null");
@@ -103,14 +88,7 @@ public class FileSystemResource extends AbstractResource implements WritableReso
 	}
 
 	/**
-	 * Create a new {@code FileSystemResource} from a {@link Path} handle,
-	 * performing all file system interactions via NIO.2 instead of {@link File}.
-	 * <p>In contrast to {@link PathResource}, this variant strictly follows the
-	 * general {@link FileSystemResource} conventions, in particular in terms of
-	 * path cleaning and {@link #createRelative(String)} handling.
-	 * @param filePath a Path handle to a file
-	 * @since 5.1
-	 * @see #FileSystemResource(File)
+	 * @see #FileSystemResource(String)
 	 */
 	public FileSystemResource(Path filePath) {
 		Assert.notNull(filePath, "Path must not be null");
@@ -139,15 +117,14 @@ public class FileSystemResource extends AbstractResource implements WritableReso
 
 
 	/**
-	 * Return the file path for this resource.
+	 * 直接返回资源 path
 	 */
 	public final String getPath() {
 		return this.path;
 	}
 
 	/**
-	 * This implementation returns whether the underlying file exists.
-	 * @see java.io.File#exists()
+	 * 通过 file 及 filePath 判断资源是否存在
 	 */
 	@Override
 	public boolean exists() {
@@ -155,10 +132,7 @@ public class FileSystemResource extends AbstractResource implements WritableReso
 	}
 
 	/**
-	 * This implementation checks whether the underlying file is marked as readable
-	 * (and corresponds to an actual file with content, not to a directory).
-	 * @see java.io.File#canRead()
-	 * @see java.io.File#isDirectory()
+	 * 资源是否可读
 	 */
 	@Override
 	public boolean isReadable() {
@@ -167,8 +141,7 @@ public class FileSystemResource extends AbstractResource implements WritableReso
 	}
 
 	/**
-	 * This implementation opens a NIO file stream for the underlying file.
-	 * @see java.io.FileInputStream
+	 * 返回资源的 InputStream
 	 */
 	@Override
 	public InputStream getInputStream() throws IOException {
@@ -181,10 +154,7 @@ public class FileSystemResource extends AbstractResource implements WritableReso
 	}
 
 	/**
-	 * This implementation checks whether the underlying file is marked as writable
-	 * (and corresponds to an actual file with content, not to a directory).
-	 * @see java.io.File#canWrite()
-	 * @see java.io.File#isDirectory()
+	 * 资源是否可写
 	 */
 	@Override
 	public boolean isWritable() {
@@ -193,8 +163,7 @@ public class FileSystemResource extends AbstractResource implements WritableReso
 	}
 
 	/**
-	 * This implementation opens a FileOutputStream for the underlying file.
-	 * @see java.io.FileOutputStream
+	 * 返回资源的 OutputStream
 	 */
 	@Override
 	public OutputStream getOutputStream() throws IOException {
@@ -202,8 +171,7 @@ public class FileSystemResource extends AbstractResource implements WritableReso
 	}
 
 	/**
-	 * This implementation returns a URL for the underlying file.
-	 * @see java.io.File#toURI()
+	 * 返回资源 URL
 	 */
 	@Override
 	public URL getURL() throws IOException {
@@ -211,8 +179,7 @@ public class FileSystemResource extends AbstractResource implements WritableReso
 	}
 
 	/**
-	 * This implementation returns a URI for the underlying file.
-	 * @see java.io.File#toURI()
+	 * 返回资源 URI
 	 */
 	@Override
 	public URI getURI() throws IOException {
@@ -220,7 +187,7 @@ public class FileSystemResource extends AbstractResource implements WritableReso
 	}
 
 	/**
-	 * This implementation always indicates a file.
+	 * 直接返回 true
 	 */
 	@Override
 	public boolean isFile() {
@@ -228,7 +195,7 @@ public class FileSystemResource extends AbstractResource implements WritableReso
 	}
 
 	/**
-	 * This implementation returns the underlying File reference.
+	 * 返回 File
 	 */
 	@Override
 	public File getFile() {
@@ -259,7 +226,7 @@ public class FileSystemResource extends AbstractResource implements WritableReso
 	}
 
 	/**
-	 * This implementation returns the underlying File/Path length.
+	 * 返回资源长度
 	 */
 	@Override
 	public long contentLength() throws IOException {
@@ -282,7 +249,7 @@ public class FileSystemResource extends AbstractResource implements WritableReso
 	}
 
 	/**
-	 * This implementation returns the underlying File/Path last-modified time.
+	 * 返回资源修改时间，单位：毫秒
 	 */
 	@Override
 	public long lastModified() throws IOException {
@@ -300,9 +267,7 @@ public class FileSystemResource extends AbstractResource implements WritableReso
 	}
 
 	/**
-	 * This implementation creates a FileSystemResource, applying the given path
-	 * relative to the path of the underlying file of this resource descriptor.
-	 * @see org.springframework.util.StringUtils#applyRelativePath(String, String)
+	 * 根据相对路径创建 Resource
 	 */
 	@Override
 	public Resource createRelative(String relativePath) {
@@ -312,8 +277,7 @@ public class FileSystemResource extends AbstractResource implements WritableReso
 	}
 
 	/**
-	 * This implementation returns the name of the file.
-	 * @see java.io.File#getName()
+	 * 返回 Filename
 	 */
 	@Override
 	public String getFilename() {
